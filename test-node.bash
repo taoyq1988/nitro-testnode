@@ -362,5 +362,6 @@ if $run; then
     echo if things go wrong - use --init to create a new chain
     echo
 
+    echo "start" $UP_FLAG $NODES
     docker-compose up $UP_FLAG $NODES
 fi

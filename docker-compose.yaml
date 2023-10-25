@@ -29,6 +29,7 @@ services:
     ports:
       - "127.0.0.1:4000:4000"
 
+
   postgres:
     image: postgres:13.6
     restart: always
@@ -41,6 +42,48 @@ services:
       - "postgres-data:/var/lib/postgresql/data"
     ports:
       - "127.0.0.1:7432:5432"
+
+  blockscout1:
+    depends_on:
+      - postgres1
+      - geth
+    image: blockscout-testnode
+    # restart: alsways
+    container_name: 'blockscout1'
+    links:
+      - postgres1:database
+    command:
+      - /bin/sh
+      - -c
+      - |
+        bin/blockscout eval "Elixir.Explorer.ReleaseTasks.create_and_migrate()"
+        node init/install.js postgres 5432
+        bin/blockscout start
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    env_file:
+      -  ./blockscout/nitro.env
+    environment:
+        ETHEREUM_JSONRPC_VARIANT: 'geth'
+        ETHEREUM_JSONRPC_HTTP_URL: http://geth:8545/
+        INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
+        DATABASE_URL: postgresql://postgres:@postgres1:5432/blockscout
+        ECTO_USE_SSL: "false"
+    ports:
+      - "127.0.0.1:8000:4000"
+
+  postgres1:
+    image: postgres:13.6
+    # restart: always
+    container_name: 'postgres1'
+    environment:
+        POSTGRES_PASSWORD: ''
+        POSTGRES_USER: 'postgres'
+        POSTGRES_HOST_AUTH_METHOD: 'trust'
+    volumes:
+      - "./postgres-data1:/var/lib/postgresql/data"
+    ports:
+      - "127.0.0.1:7433:5432"
 
   redis:
     image: redis:6.2.6

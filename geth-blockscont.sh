@@ -1,0 +1,1 @@
+docker-compose up blockscout1 postgres1
